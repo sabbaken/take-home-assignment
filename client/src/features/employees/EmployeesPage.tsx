@@ -42,7 +42,9 @@ export function EmployeesPage() {
               <p className="text-muted-foreground text-sm" aria-live="polite">
                 {employees.isPending
                   ? 'Loading employees…'
-                  : `${total} ${total === 1 ? 'employee' : 'employees'}`}
+                  : employees.isError
+                    ? ''
+                    : `${total} ${total === 1 ? 'employee' : 'employees'}`}
               </p>
               {employees.isFetching && !employees.isPending ? (
                 <span className="text-muted-foreground text-xs">Updating…</span>
