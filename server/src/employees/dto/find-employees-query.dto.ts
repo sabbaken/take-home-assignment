@@ -13,11 +13,13 @@ const toIntArray = ({ value }: { value: unknown }): unknown => {
 
   const raw = Array.isArray(value) ? value : String(value).split(',');
 
-  return raw
-    .map((item) => String(item).trim())
-    .filter((item) => item.length > 0)
-    // Non-numeric entries are passed through untouched so that @IsInt rejects them.
-    .map((item) => (/^\d+$/.test(item) ? Number(item) : item));
+  return (
+    raw
+      .map((item) => String(item).trim())
+      .filter((item) => item.length > 0)
+      // Non-numeric entries are passed through untouched so that @IsInt rejects them.
+      .map((item) => (/^\d+$/.test(item) ? Number(item) : item))
+  );
 };
 
 const IdListParam = () =>
