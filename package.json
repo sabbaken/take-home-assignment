@@ -12,8 +12,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "db:up": "docker compose up -d",
-    "db:down": "docker compose down",
+    "db:up": "docker compose -f server/db/docker-compose.yml up -d",
+    "db:down": "docker compose -f server/db/docker-compose.yml down",
     "start:server": "npm run start:dev -w server",
     "start:client": "npm run dev -w client",
     "dev": "concurrently -n server,client -c blue,magenta \"npm:start:server\" \"npm:start:client\"",

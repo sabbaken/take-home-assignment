@@ -1,3 +1,5 @@
+name: assignment
+
 services:
   db:
     build: .
