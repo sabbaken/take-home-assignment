@@ -5,4 +5,7 @@
  */
 export const routes = {
   employees: '/employees',
+  roles: '/roles',
+  countries: '/countries',
+  departments: '/departments',
 } as const;

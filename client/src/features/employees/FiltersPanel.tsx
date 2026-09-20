@@ -2,7 +2,7 @@ import { Funnel, X } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FilterGroup } from './FilterGroup';
-import { ErrorState } from './states/ErrorState';
+import { ErrorState } from '@/components/states/ErrorState';
 import type { EmployeeFilters, FilterKey, FilterOptions } from './types';
 
 interface FiltersPanelProps {

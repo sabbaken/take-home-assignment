@@ -54,11 +54,13 @@ app and hitting the API; if a change warrants tests, propose adding the tooling 
   no shared base class. A new table is a copy of `server/src/roles/` with the entity and the path
   swapped, not an inheritance hierarchy — see `server/CLAUDE.md` → "Adding a resource".
 - **The API contract is duplicated on purpose.** The server DTOs
-  (`server/src/employees/dto/`, `server/src/filters/dto/`) and
-  `client/src/features/employees/types.ts` are hand-kept mirrors — a shared workspace package was
-  rejected as overkill for ~15 lines. Any change to a contract the client reads must touch both
-  sides in the same commit. The client mirrors only `GET /api/employees` and `GET /api/filters`;
-  the write DTOs have no client-side twin, and adding one would be dead code until the page posts.
+  (`server/src/employees/dto/`, `server/src/filters/dto/`), the three lookup entities and
+  `client/src/features/employees/types.ts` + `client/src/features/reference/types.ts` are
+  hand-kept mirrors — a shared workspace package was rejected as overkill for ~20 lines. Any
+  change to a contract the client reads must touch both sides in the same commit. The client
+  mirrors `GET /api/employees`, `GET /api/filters` and the `{ id, name }` row that
+  `GET /api/{roles,countries,departments}` return; the write DTOs have no client-side twin, and
+  adding one would be dead code until a page posts.
 - **Dev is same-origin.** Vite proxies `/api` to the API, so the client never needs a base URL and
   there is no `VITE_API_URL`. Keep fetches relative.
 - **Formatting is Prettier** (single quotes, trailing commas, `printWidth: 100`) plus

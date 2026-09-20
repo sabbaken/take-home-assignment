@@ -17,18 +17,24 @@ npm run lint      # eslint "src/**/*.{ts,tsx}"
 
 ## Structure
 
-Feature-first: everything about the screen lives in `src/features/employees/`,
-`src/components/ui/` holds only unowned shadcn primitives, and `src/components/layout/` holds the
-app chrome (`SiteHeader`). `App.tsx` is the route layout — it sets one Phosphor `IconContext`
-default, renders the header and an `<Outlet />`; `router.tsx` owns the React Router config and
-`routes.ts` the path map; `main.tsx` owns the `QueryClient` (`retry: 1`, no refetch on focus) and
-renders the `RouterProvider`.
+Feature-first. Two features: `src/features/employees/` (the assignment's screen) and
+`src/features/reference/` (one parameterised screen serving `/roles`, `/countries` and
+`/departments`). Outside them, `src/components/ui/` holds only unowned shadcn primitives,
+`src/components/layout/` the app chrome (`AppSidebar`, `PageHeader`), `src/components/states/` the
+empty / error / skeleton views both features render, and `src/lib/api.ts` the one `fetch` wrapper
+every feature's `api.ts` goes through. There is no `src/hooks/`: the one hook shadcn generates
+(`use-mobile`, for the sidebar) is `isMobile` from `react-device-detect` instead.
 
-Within the feature: `api.ts` (fetch + query-string building), `types.ts` (the API contract mirror),
-`use-*.ts` hooks, PascalCase components, and `states/` for the empty / error / skeleton views.
-`EmployeesPage` is the only stateful composer — it owns the hooks and picks which state to render;
-everything below it takes props. Imports use the `@/` alias (Vite + tsconfig paths) for anything
-outside the current feature folder, relative paths within it.
+`App.tsx` is the route layout — one Phosphor `IconContext` default, `SidebarProvider` +
+`AppSidebar` + `SidebarInset` around an `<Outlet />`, and nothing else; `router.tsx` owns the
+React Router config and `routes.ts` the path map; `main.tsx` owns the `QueryClient` (`retry: 1`,
+no refetch on focus) and renders the `RouterProvider`.
+
+Within a feature: `api.ts` (fetch + query-string building), `types.ts` (the API contract mirror),
+`use-*.ts` hooks and PascalCase components. `EmployeesPage` and `ReferencePage` are the only
+stateful composers — each owns its hooks and picks which state to render; everything below takes
+props. Imports use the `@/` alias (Vite + tsconfig paths) for anything outside the current feature
+folder, relative paths within it.
 
 ## Conventions worth keeping
 
@@ -44,14 +50,29 @@ outside the current feature folder, relative paths within it.
   table. New data-driven UI follows the same four-way branch instead of rendering `data?.x ?? []`
   blindly.
 - **Routing is `router.tsx` plus `routes.ts`.** One data router (`createBrowserRouter`), `App` as
-  the layout route, and `/employees` as the only screen; `/` and every unmatched path
-  `<Navigate replace>` to it, so there is no 404 page to maintain while there is one page. A
-  second screen is a second entry in that array, a path in `routes.ts` and an item in
-  `SiteHeader`'s `NAV_ITEMS` — paths belong in that map, never inline in a `<Link>`. **`routes.ts`
-  imports nothing on purpose:** it used to live in `router.tsx`, and `SiteHeader` reading a path
-  from there closed a cycle (`router` → `App` → `SiteHeader` → `router`) that crashed the app with
-  _"Cannot access 'routes' before initialization"_. Data still comes from TanStack Query, not from
-  route loaders.
+  the layout route, four screens under it; `/` and every unmatched path `<Navigate replace>` to
+  `/employees`, so there is no 404 page to maintain. A new screen is an entry in that array, a
+  path in `routes.ts` and an item in `AppSidebar`'s `NAV_GROUPS` — paths belong in that map, never
+  inline in a `<Link>`. **`routes.ts` imports nothing on purpose:** it used to live in
+  `router.tsx`, and the nav reading a path from there closed a cycle
+  (`router` → `App` → `AppSidebar` → `router`) that crashed the app with _"Cannot access 'routes'
+  before initialization"_. Data still comes from TanStack Query, not from route loaders.
+- **Navigation is the sidebar's job; the header only says where you are.** `AppSidebar` is
+  `collapsible="icon"` (⌘/Ctrl-B, state kept in a cookie by the shadcn primitive) and groups the
+  links: "Directory" for employees, "Reference data" for the three lookup tables. `PageHeader`
+  carries the sidebar trigger, the `<h1>` and the row count, and **each page renders it itself**
+  rather than the layout doing it — the count is the page's own query result, so it stays a prop
+  instead of travelling up through a context. Its `count` prop is `number | 'loading' | null`,
+  where `null` is "the fetch failed, show nothing".
+- **The three reference tables share one screen.** `ReferencePage` takes `resource` as a prop and
+  `resources.ts` maps it to the title, the noun pair for the count and the request path — which is
+  the key itself. A fourth lookup table is a key there plus a route, not a fourth copy of the
+  page. (The server deliberately does the opposite; the README's trade-offs explain why each side
+  went the way it did.)
+- **The state views are shared, not per-feature.** `ErrorState`, `EmptyState` and `TableSkeleton`
+  live in `src/components/states/` because both features render them. They take copy as props —
+  `EmptyState` an optional Phosphor `icon` and an `action` node, `TableSkeleton` one width class
+  per column. Feature-specific wording stays at the call site.
 - **Flat surfaces, no cards.** Structure comes from rules, spacing and type scale — `border-t` above
   a table, `divide-y` between filter groups — not from boxing every region in
   `bg-card rounded-xl border`. The stacked-cards look is the thing to avoid; `ErrorState` keeps its
@@ -59,15 +80,18 @@ outside the current feature folder, relative paths within it.
 - **Pointer cursors come from `index.css`.** Tailwind v4 drops the browser default, so one base rule
   (`button:not(:disabled)`, `[role='button']`) covers every shadcn control, Radix's
   `<button role="checkbox">` included. Don't sprinkle `cursor-pointer` per component.
-- **Every `shadcn add` needs the same three fixes.** The CLI generated `checkbox.tsx` and
-  `navigation-menu.tsx` with a `lucide-react` icon (rewired to Phosphor — `components.json` sets
-  `"iconLibrary": "phosphor"`, and a second icon package is not worth it), with `cn` imported from
-  an unrelated npm package called `cn` (it belongs to `@/lib/utils`), and with the `radix-ui`
-  umbrella package (the rest of the project depends on the single `@radix-ui/react-*` packages).
-  Check those three before committing what the CLI wrote, and uninstall what it added.
-- **Radix marks an active nav link as `data-active=""`,** not `"true"`, so shadcn's shipped
-  `data-[active=true]:` selectors never match. `navigation-menu.tsx` is rewired to `data-[active]:`
-  and `SiteHeader` styles the current link the same way.
+- **Every `shadcn add` needs the same three fixes.** The CLI generates components with a
+  `lucide-react` icon (rewire to Phosphor — `components.json` sets `"iconLibrary": "phosphor"`,
+  and a second icon package is not worth it), with `cn` imported from an unrelated npm package
+  called `cn` (it belongs to `@/lib/utils`), and with the `radix-ui` umbrella package (the rest of
+  the project depends on the single `@radix-ui/react-*` packages). Check those three before
+  committing what the CLI wrote, and uninstall what it added. It also **overwrites primitives that
+  are already there** — `sidebar` rewrote `button.tsx` and `skeleton.tsx`; `git checkout` those
+  back. The sidebar's CSS variables arrive as `hsl()` while this palette is `oklch()` neutral;
+  they were converted by hand in `index.css`.
+- **`src/components/ui/**` is exempt from `react-refresh/only-export-components`** in
+  `eslint.config.js`. Upstream ships hooks next to components there (`sidebar.tsx` exports
+  `useSidebar`); that is not ours to reorganise, and the rule only guards dev HMR.
 - **Tailwind v4, CSS-first.** No `tailwind.config` — the palette is CSS variables in `index.css`
   (`:root`, a `.dark` override, exposed through `@theme inline`). Style with the semantic tokens
   (`bg-card`, `text-muted-foreground`, `border`) rather than raw colours: the `.dark` palette is

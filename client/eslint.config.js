@@ -22,4 +22,11 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  {
+    // Vendored shadcn primitives: several ship a hook or a cva variant next to
+    // their components (sidebar.tsx exports `useSidebar`). That is upstream's
+    // shape, not ours to reorganise, and the rule only guards dev HMR.
+    files: ['src/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 );
