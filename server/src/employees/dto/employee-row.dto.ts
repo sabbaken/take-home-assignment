@@ -1,3 +1,5 @@
+import { CollectionDto } from '../../common/collection.dto';
+
 /** Flat row shape returned to the client — no nested relation objects to unwrap. */
 export interface EmployeeRowDto {
   id: number;
@@ -8,7 +10,4 @@ export interface EmployeeRowDto {
   department: string | null;
 }
 
-export interface EmployeesResponseDto {
-  data: EmployeeRowDto[];
-  total: number;
-}
+export type EmployeesResponseDto = CollectionDto<EmployeeRowDto>;

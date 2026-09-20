@@ -1,27 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Country, Department, Role } from '../database/entities';
+import { CountriesService } from '../countries/countries.service';
+import { DepartmentsService } from '../departments/departments.service';
+import { RolesService } from '../roles/roles.service';
 import { FilterOptionsDto } from './dto/filter-options.dto';
 
 @Injectable()
 export class FiltersService {
   constructor(
-    @InjectRepository(Country) private readonly countries: Repository<Country>,
-    @InjectRepository(Department) private readonly departments: Repository<Department>,
-    @InjectRepository(Role) private readonly roles: Repository<Role>,
+    private readonly countries: CountriesService,
+    private readonly departments: DepartmentsService,
+    private readonly roles: RolesService,
   ) {}
 
-  /** All three option lists in one response — one round trip instead of three. */
+  /**
+   * A view over the three lookup resources rather than a resource of its own:
+   * the filter bar needs all three lists at once and should not pay for three
+   * round trips to assemble one row of dropdowns.
+   */
   async findAll(): Promise<FilterOptionsDto> {
-    const order = { name: 'ASC' } as const;
-
     const [countries, departments, roles] = await Promise.all([
-      this.countries.find({ order }),
-      this.departments.find({ order }),
-      this.roles.find({ order }),
+      this.countries.findAll(),
+      this.departments.findAll(),
+      this.roles.findAll(),
     ]);
 
-    return { countries, departments, roles };
+    return { countries: countries.data, departments: departments.data, roles: roles.data };
   }
 }

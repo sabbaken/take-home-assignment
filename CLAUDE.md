@@ -9,6 +9,9 @@ A take-home assignment: read the MySQL database that ships with the task
 table filterable by role, country and department. It is a portfolio piece — a reviewer will read
 the code and the README, so clarity of the layout matters as much as working behaviour.
 
+The brief only asks for that one table. The API deliberately goes further: every table in the
+schema is a full CRUD resource, because a service that can only read is not one anybody ships.
+
 npm workspaces monorepo, one `npm install` at the root covers both packages:
 
 - `client/` — React + Vite SPA. See [`client/CLAUDE.md`](client/CLAUDE.md).
@@ -37,13 +40,21 @@ app and hitting the API; if a change warrants tests, propose adding the tooling 
 
 ## Rules that span both packages
 
-- **The database is read-only and given.** Never edit `server/db/seed.sql` or the schema it creates,
-  never enable TypeORM `synchronize`, and never add write endpoints. The container is rebuilt from
-  that seed, so any data change is lost anyway.
+- **The schema is given; the data is not.** Never edit `server/db/seed.sql` or the schema it
+  creates, and never enable TypeORM `synchronize` — the entities are hand-written mirrors of that
+  seed and the ORM must never alter it. The **rows** are writable: every table has `POST`,
+  `PATCH` and `DELETE`. Keep in mind while testing that the container is rebuilt from the seed,
+  so writes do not survive `db:down` + `db:up` — and that a manual check against the running API
+  leaves rows behind unless it cleans up after itself.
+- **A resource is a plain Nest module** — controller, service, DTOs, written out per table, with
+  no shared base class. A new table is a copy of `server/src/roles/` with the entity and the path
+  swapped, not an inheritance hierarchy — see `server/CLAUDE.md` → "Adding a resource".
 - **The API contract is duplicated on purpose.** The server DTOs
   (`server/src/employees/dto/`, `server/src/filters/dto/`) and
   `client/src/features/employees/types.ts` are hand-kept mirrors — a shared workspace package was
-  rejected as overkill for ~15 lines. Any contract change must touch both sides in the same commit.
+  rejected as overkill for ~15 lines. Any change to a contract the client reads must touch both
+  sides in the same commit. The client mirrors only `GET /api/employees` and `GET /api/filters`;
+  the write DTOs have no client-side twin, and adding one would be dead code until the page posts.
 - **Dev is same-origin.** Vite proxies `/api` to the API, so the client never needs a base URL and
   there is no `VITE_API_URL`. Keep fetches relative.
 - **Formatting is Prettier** (single quotes, trailing commas, `printWidth: 100`) plus

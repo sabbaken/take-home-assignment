@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Department } from '../database/entities';
+import { DepartmentsController } from './departments.controller';
+import { DepartmentsService } from './departments.service';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Department])],
+  controllers: [DepartmentsController],
+  providers: [DepartmentsService],
+  // Exported so `FiltersModule` can reuse the service instead of reaching for
+  // the repository a second time.
+  exports: [DepartmentsService],
+})
+export class DepartmentsModule {}

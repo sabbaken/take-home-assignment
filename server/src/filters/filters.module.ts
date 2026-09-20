@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Country, Department, Role } from '../database/entities';
+import { CountriesModule } from '../countries/countries.module';
+import { DepartmentsModule } from '../departments/departments.module';
+import { RolesModule } from '../roles/roles.module';
 import { FiltersController } from './filters.controller';
 import { FiltersService } from './filters.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Country, Department, Role])],
+  imports: [CountriesModule, DepartmentsModule, RolesModule],
   controllers: [FiltersController],
   providers: [FiltersService],
 })
