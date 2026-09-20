@@ -33,7 +33,7 @@ export function FiltersPanel({
   onClear,
 }: FiltersPanelProps) {
   return (
-    <aside className="bg-card rounded-xl border p-5 lg:sticky lg:top-8">
+    <aside className="lg:sticky lg:top-22">
       <div className="mb-4 flex h-8 items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Funnel aria-hidden />
@@ -52,16 +52,17 @@ export function FiltersPanel({
       ) : isLoading || !options ? (
         <FiltersSkeleton />
       ) : (
-        <div className="space-y-6">
+        <div className="divide-y">
           {GROUPS.map((group) => (
-            <FilterGroup
-              key={group.filterKey}
-              title={group.title}
-              filterKey={group.filterKey}
-              options={options[group.optionsKey]}
-              selectedIds={filters[group.filterKey]}
-              onToggle={onToggle}
-            />
+            <div key={group.filterKey} className="py-5 first:pt-0 last:pb-0">
+              <FilterGroup
+                title={group.title}
+                filterKey={group.filterKey}
+                options={options[group.optionsKey]}
+                selectedIds={filters[group.filterKey]}
+                onToggle={onToggle}
+              />
+            </div>
           ))}
         </div>
       )}

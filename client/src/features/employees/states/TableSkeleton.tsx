@@ -4,7 +4,7 @@ const COLUMN_WIDTHS = ['w-8', 'w-24', 'w-28', 'w-24', 'w-28', 'w-24'];
 
 export function TableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <div className="bg-card overflow-hidden rounded-xl border" aria-hidden>
+    <div className="border-t" aria-hidden>
       <div className="flex gap-6 border-b px-3 py-3">
         {COLUMN_WIDTHS.map((width, index) => (
           <Skeleton key={index} className={`h-3 ${width}`} />

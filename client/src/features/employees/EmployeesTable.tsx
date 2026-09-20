@@ -21,12 +21,7 @@ const renderValue = (value: string | null) =>
 
 export function EmployeesTable({ rows, isStale = false }: EmployeesTableProps) {
   return (
-    <div
-      className={cn(
-        'bg-card overflow-hidden rounded-xl border transition-opacity',
-        isStale && 'opacity-60',
-      )}
-    >
+    <div className={cn('border-t transition-opacity', isStale && 'opacity-60')}>
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">

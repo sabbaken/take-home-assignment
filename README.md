@@ -17,8 +17,10 @@ REST resource for every table in the schema.
 ## Layout
 
 ```
-client/src/routes.tsx           React Router config — `/` redirects to `/employees`
+client/src/router.tsx           React Router config — `/` redirects to `/employees`
+client/src/routes.ts            the path map every link and route quotes
 client/src/features/employees   api client, query hooks, filter state, table and panel
+client/src/components/layout    app chrome — the top navigation bar
 client/src/components/ui        shadcn/ui primitives
 server/src/employees            /api/employees — CRUD plus the filtered table query
 server/src/countries            /api/countries   — a reference table: controller, service, DTOs

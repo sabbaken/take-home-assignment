@@ -77,4 +77,12 @@
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
   }
+
+  /* Tailwind v4 dropped the browser's pointer cursor on buttons. Every shadcn
+     control is a <button> underneath (Radix's checkbox included), so one rule
+     here covers them all — and the next primitive that gets added. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
