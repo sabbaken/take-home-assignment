@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchFilterOptions } from './api';
+import { fetchFilterOptions } from '../api';
 
 export function useFilterOptions() {
   return useQuery({

@@ -1,9 +1,9 @@
 import { PageHeader, type RowCount } from '@/components/layout/PageHeader';
 import { EmployeesContent } from './EmployeesContent';
-import { FiltersPanel } from './FiltersPanel';
+import { FiltersPanel } from './filters/FiltersPanel';
+import { useEmployeeFilters } from './filters/use-employee-filters';
+import { useFilterOptions } from './filters/use-filter-options';
 import { useEmployees } from './use-employees';
-import { useEmployeeFilters } from './use-employee-filters';
-import { useFilterOptions } from './use-filter-options';
 
 export function EmployeesPage() {
   const { filters, toggle, clear, selectedCount } = useEmployeeFilters();

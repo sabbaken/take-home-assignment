@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import type { FilterKey, FilterOption } from './types';
+import type { FilterKey, FilterOption } from '../types';
 
 interface FilterGroupProps {
   title: string;

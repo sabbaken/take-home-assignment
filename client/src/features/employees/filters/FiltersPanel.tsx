@@ -1,8 +1,8 @@
 import { Funnel, X } from '@phosphor-icons/react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import type { EmployeeFilters, FilterKey, FilterOptions } from '../types';
 import { FilterGroups } from './FilterGroups';
-import type { EmployeeFilters, FilterKey, FilterOptions } from './types';
 
 interface FiltersPanelProps {
   query: UseQueryResult<FilterOptions>;

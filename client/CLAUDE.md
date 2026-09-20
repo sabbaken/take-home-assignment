@@ -31,7 +31,11 @@ React Router config and `routes.ts` the path map; `main.tsx` owns the `QueryClie
 no refetch on focus) and renders the `RouterProvider`.
 
 Within a feature: `api.ts` (fetch + query-string building), `types.ts` (the API contract mirror),
-`use-*.ts` hooks and PascalCase components. **One component per file, named after it** —
+`use-*.ts` hooks and PascalCase components. A feature may nest a subfolder for one cohesive piece
+of itself — `employees/filters/` holds the panel, its groups, the skeleton and the two filter
+hooks, so the folder's top level reads as the screen (page, content, table) and nothing else.
+`api.ts` and `types.ts` stay at the feature root as its single contract mirror, which is why the
+subfolder imports them with `../`. **One component per file, named after it** —
 `RolesPage.tsx` holds `RolesPage` and nothing else, `RolesContent.tsx` the `*Content` it renders.
 The `*Page` is the only stateful composer in each folder — it owns its hooks and renders the
 header, the layout and a `*Content` sibling that picks the state; everything below those takes
@@ -40,9 +44,9 @@ for anything outside the current feature folder, relative paths within it.
 
 ## Conventions worth keeping
 
-- **Server-side filtering.** Filter state is ids in `use-employee-filters.ts`; every change refetches
-  through `useEmployees`. Never filter the returned rows in the component — with more rows that
-  stops being correct.
+- **Server-side filtering.** Filter state is ids in `filters/use-employee-filters.ts`; every
+  change refetches through `useEmployees`. Never filter the returned rows in the component — with
+  more rows that stops being correct.
 - **Query keys and caching.** `['employees', filters]` makes the filter object the cache key, so
   filters must stay a plain serialisable object. Employees use `placeholderData: keepPreviousData`
   so toggling a checkbox never flashes the table back to a skeleton; filter options use

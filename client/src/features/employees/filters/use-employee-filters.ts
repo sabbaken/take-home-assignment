@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { EmployeeFilters, FilterKey } from './types';
+import type { EmployeeFilters, FilterKey } from '../types';
 
 const EMPTY_FILTERS: EmployeeFilters = {
   roleIds: [],

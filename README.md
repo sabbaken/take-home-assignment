@@ -21,7 +21,7 @@ too.
 ```
 client/src/router.tsx           React Router config — `/` redirects to `/employees`
 client/src/routes.ts            the path map every link and route quotes
-client/src/features/employees   api client, query hooks, filter state, table and panel
+client/src/features/employees   api client, query hooks, table; filters/ — panel and filter state
 client/src/features/roles       /roles — the lookup table's own screen: api, hook, page, table
 client/src/features/countries   /countries — likewise
 client/src/features/departments /departments — likewise

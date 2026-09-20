@@ -1,8 +1,8 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { ErrorState } from '@/components/states/ErrorState';
+import type { EmployeeFilters, FilterKey, FilterOptions } from '../types';
 import { FilterGroup } from './FilterGroup';
 import { FiltersSkeleton } from './FiltersSkeleton';
-import type { EmployeeFilters, FilterKey, FilterOptions } from './types';
 
 interface FilterGroupsProps {
   query: UseQueryResult<FilterOptions>;
