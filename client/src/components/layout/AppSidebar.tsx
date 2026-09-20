@@ -1,5 +1,4 @@
 import {
-  AddressBook,
   Buildings,
   GlobeHemisphereWest,
   IdentificationBadge,
@@ -13,7 +12,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -48,27 +46,13 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   },
 ];
 
+/** Navigation only: the app has no name to put above it, so there is no header. */
 export function AppSidebar() {
   const { pathname } = useLocation();
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link to={routes.employees}>
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <AddressBook weight="fill" size={18} aria-hidden />
-                </div>
-                <span className="font-semibold tracking-tight">Directory</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
-      <SidebarContent>
+      <SidebarContent className="pt-2">
         {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>

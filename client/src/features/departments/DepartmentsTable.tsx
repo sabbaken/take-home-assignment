@@ -6,9 +6,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ReferenceRow } from './types';
+import type { Department } from './types';
 
-export function ReferenceTable({ rows }: { rows: ReferenceRow[] }) {
+export function DepartmentsTable({ rows }: { rows: Department[] }) {
   return (
     <div className="border-t">
       <Table>
@@ -19,10 +19,10 @@ export function ReferenceTable({ rows }: { rows: ReferenceRow[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell className="text-muted-foreground tabular-nums">{row.id}</TableCell>
-              <TableCell className="font-medium">{row.name}</TableCell>
+          {rows.map((department) => (
+            <TableRow key={department.id}>
+              <TableCell className="text-muted-foreground tabular-nums">{department.id}</TableCell>
+              <TableCell className="font-medium">{department.name}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,7 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import App from './App';
+import { CountriesPage } from '@/features/countries/CountriesPage';
+import { DepartmentsPage } from '@/features/departments/DepartmentsPage';
 import { EmployeesPage } from '@/features/employees/EmployeesPage';
-import { ReferencePage } from '@/features/reference/ReferencePage';
+import { RolesPage } from '@/features/roles/RolesPage';
 import { routes } from './routes';
 
 // Employees is the screen the assignment asks for; the three lookup tables sit
@@ -13,9 +15,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to={routes.employees} replace /> },
       { path: 'employees', Component: EmployeesPage },
-      { path: 'roles', element: <ReferencePage resource="roles" /> },
-      { path: 'countries', element: <ReferencePage resource="countries" /> },
-      { path: 'departments', element: <ReferencePage resource="departments" /> },
+      { path: 'roles', Component: RolesPage },
+      { path: 'countries', Component: CountriesPage },
+      { path: 'departments', Component: DepartmentsPage },
       { path: '*', element: <Navigate to={routes.employees} replace /> },
     ],
   },

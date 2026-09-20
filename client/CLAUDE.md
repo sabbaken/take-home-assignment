@@ -17,13 +17,13 @@ npm run lint      # eslint "src/**/*.{ts,tsx}"
 
 ## Structure
 
-Feature-first. Two features: `src/features/employees/` (the assignment's screen) and
-`src/features/reference/` (one parameterised screen serving `/roles`, `/countries` and
-`/departments`). Outside them, `src/components/ui/` holds only unowned shadcn primitives,
-`src/components/layout/` the app chrome (`AppSidebar`, `PageHeader`), `src/components/states/` the
-empty / error / skeleton views both features render, and `src/lib/api.ts` the one `fetch` wrapper
-every feature's `api.ts` goes through. There is no `src/hooks/`: the one hook shadcn generates
-(`use-mobile`, for the sidebar) is `isMobile` from `react-device-detect` instead.
+Feature-first, one folder per table: `src/features/employees/` (the assignment's screen) plus
+`roles/`, `countries/` and `departments/`. Outside them, `src/components/ui/` holds only unowned
+shadcn primitives, `src/components/layout/` the app chrome (`AppSidebar`, `PageHeader`),
+`src/components/states/` the empty / error / skeleton views every feature renders, and
+`src/lib/api.ts` the one `fetch` wrapper every feature's `api.ts` goes through. There is no
+`src/hooks/`: the one hook shadcn generates (`use-mobile`, for the sidebar) is `isMobile` from
+`react-device-detect` instead.
 
 `App.tsx` is the route layout — one Phosphor `IconContext` default, `SidebarProvider` +
 `AppSidebar` + `SidebarInset` around an `<Outlet />`, and nothing else; `router.tsx` owns the
@@ -31,10 +31,10 @@ React Router config and `routes.ts` the path map; `main.tsx` owns the `QueryClie
 no refetch on focus) and renders the `RouterProvider`.
 
 Within a feature: `api.ts` (fetch + query-string building), `types.ts` (the API contract mirror),
-`use-*.ts` hooks and PascalCase components. `EmployeesPage` and `ReferencePage` are the only
-stateful composers — each owns its hooks and picks which state to render; everything below takes
-props. Imports use the `@/` alias (Vite + tsconfig paths) for anything outside the current feature
-folder, relative paths within it.
+`use-*.ts` hooks and PascalCase components. The `*Page` is the only stateful composer in each
+folder — it owns its hooks and renders the header, the layout and a `*Content` sibling that picks
+the state; everything below those takes props. Imports use the `@/` alias (Vite + tsconfig paths)
+for anything outside the current feature folder, relative paths within it.
 
 ## Conventions worth keeping
 
@@ -49,6 +49,17 @@ folder, relative paths within it.
   retry, empty rows → `EmptyState` (offering "clear filters" only when some are set), else the
   table. New data-driven UI follows the same four-way branch instead of rendering `data?.x ?? []`
   blindly.
+- **That branch is guard clauses in a `*Content` component, never a ternary chain in JSX.** Each
+  page is a `*Page` that renders the header and the layout, and a `*Content` below it in the same
+  file that does nothing but `if (…) return <State />`. `*Content` takes the query itself
+  (`UseQueryResult<T>`) rather than unpacked flags, which is what makes `query.data` a `T` after
+  the first two guards — that is why no page needs `data ?? []`. The same split is why
+  `FiltersPanel` hands its three states to a `FilterGroups` child.
+- **Keep branching out of JSX generally.** A `? :` that picks between two elements is fine
+  (`selectedCount > 0 ? <Button /> : null`); a chain of them is not. Name the value above the
+  `return` (`const count: RowCount = …`), pull the formatting into a function (`formatCount` in
+  `PageHeader`, `renderValue` in `EmployeesTable`), or split off a component with guard clauses.
+  JSX should read as the shape of the markup, not as the decision tree behind it.
 - **Routing is `router.tsx` plus `routes.ts`.** One data router (`createBrowserRouter`), `App` as
   the layout route, four screens under it; `/` and every unmatched path `<Navigate replace>` to
   `/employees`, so there is no 404 page to maintain. A new screen is an entry in that array, a
@@ -59,18 +70,22 @@ folder, relative paths within it.
   before initialization"_. Data still comes from TanStack Query, not from route loaders.
 - **Navigation is the sidebar's job; the header only says where you are.** `AppSidebar` is
   `collapsible="icon"` (⌘/Ctrl-B, state kept in a cookie by the shadcn primitive) and groups the
-  links: "Directory" for employees, "Reference data" for the three lookup tables. `PageHeader`
+  links: "Directory" for employees, "Reference data" for the three lookup tables. It has **no
+  header row** — the app is not a product with a name, so a logo/wordmark there would be invented
+  chrome; the sidebar is the link list and nothing else. `PageHeader`
   carries the sidebar trigger, the `<h1>` and the row count, and **each page renders it itself**
   rather than the layout doing it — the count is the page's own query result, so it stays a prop
-  instead of travelling up through a context. Its `count` prop is `number | 'loading' | null`,
-  where `null` is "the fetch failed, show nothing".
-- **The three reference tables share one screen.** `ReferencePage` takes `resource` as a prop and
-  `resources.ts` maps it to the title, the noun pair for the count and the request path — which is
-  the key itself. A fourth lookup table is a key there plus a route, not a fourth copy of the
-  page. (The server deliberately does the opposite; the README's trade-offs explain why each side
-  went the way it did.)
+  instead of travelling up through a context. Its `count` prop is the exported `RowCount`
+  (`number | 'loading' | null`), where `null` is "the fetch failed, show nothing".
+- **One feature folder per table, like the server's one module per table.** `roles/`, `countries/`
+  and `departments/` are near copies of each other — same two columns, same four render states —
+  and stay that way on purpose: the point of a screen per table is that one of them can grow a
+  filter, a column or a form without the other two inheriting it, and without a `resource` prop
+  threading through a shared page. A fifth table is a copy of `roles/` with the type, the path and
+  the strings swapped, plus a route and a nav item. The `{ id, name }` row is declared once per
+  folder rather than shared.
 - **The state views are shared, not per-feature.** `ErrorState`, `EmptyState` and `TableSkeleton`
-  live in `src/components/states/` because both features render them. They take copy as props —
+  live in `src/components/states/` because every feature renders them. They take copy as props —
   `EmptyState` an optional Phosphor `icon` and an `action` node, `TableSkeleton` one width class
   per column. Feature-specific wording stays at the call site.
 - **Flat surfaces, no cards.** Structure comes from rules, spacing and type scale — `border-t` above

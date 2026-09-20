@@ -22,9 +22,11 @@ too.
 client/src/router.tsx           React Router config — `/` redirects to `/employees`
 client/src/routes.ts            the path map every link and route quotes
 client/src/features/employees   api client, query hooks, filter state, table and panel
-client/src/features/reference   one parameterised screen for roles / countries / departments
+client/src/features/roles       /roles — the lookup table's own screen: api, hook, page, table
+client/src/features/countries   /countries — likewise
+client/src/features/departments /departments — likewise
 client/src/components/layout    app chrome — the sidebar and the page header
-client/src/components/states    the empty / error / skeleton views both features render
+client/src/components/states    the empty / error / skeleton views every feature renders
 client/src/components/ui        shadcn/ui primitives
 client/src/lib/api.ts           the one `fetch` wrapper every feature's `api.ts` goes through
 server/src/employees            /api/employees — CRUD plus the filtered table query
@@ -189,8 +191,8 @@ unrecognised is passed on to Nest's default filter rather than dressed up as a c
 - **The API contract is duplicated** in `client/src/features/*/types.ts` rather than shared
   through a workspace package: a `packages/shared` would need its own build and resolve setup in
   both Vite and Nest for ~20 lines of types. Worth extracting once the contract grows. The client
-  mirrors only the responses it reads — the employees table, the filter options and the `{ id,
-name }` row the three reference resources share; the write DTOs have no client-side twin
+  mirrors only the responses it reads — the employees table, the filter options and the
+  `{ id, name }` row of each lookup resource; the write DTOs have no client-side twin
   because no page posts.
 - **Only the employees list is wrapped** in `{ data, total }` — the page prints that count, and
   it is the one endpoint big enough to grow a page size or a cursor. The reference tables return
@@ -200,20 +202,30 @@ name }` row the three reference resources share; the write DTOs have no client-s
 - **Navigation lives in a sidebar, page identity in the header.** The app started with a top
   nav bar, which works for one screen and stops working at four — a sidebar is where a list of
   resources is expected to be, and it collapses to an icon rail when the employees table wants the
-  width. What is left in the header is what the sidebar cannot say: which page you are on and how
-  many rows it is showing. That header is rendered by each page rather than by the layout, so the
-  count comes straight from the page's own query instead of travelling up through a context.
-- **One screen for three reference tables.** `roles`, `countries` and `departments` are the same
-  two columns, so `ReferencePage` takes the resource as a prop and the router names it three
-  times. This is the opposite call from the server's four hand-written resources, and for the
-  opposite reason: there, the duplication buys a reader a controller that states its own routes;
-  here, three copies of a 40-line page would differ by one string and drift the moment one of them
-  is touched.
+  width. It carries links and nothing above them: this is an assignment, not a product with a
+  name, and a wordmark there would be invented branding. What is left in the header is what the
+  sidebar cannot say: which page you are on and how many rows it is showing. That header is
+  rendered by each page rather than by the layout, so the count comes straight from the page's own
+  query instead of travelling up through a context.
+- **One screen per table on the client, matching one module per table on the server.** `roles`,
+  `countries` and `departments` are the same two columns, and an earlier version had them share a
+  single `ReferencePage` that took the resource as a prop. That version was shorter and wrong for
+  what these screens are: the moment one of them wants a search box, an extra column or a create
+  form, the prop turns into a configuration object every other screen has to be read through.
+  Written out, each folder holds its own page, table, `api.ts`, `types.ts` and query hook, and
+  changing one of them cannot reach the other two. Three near-identical 45-line pages are the
+  trade — the same one the API makes, for the same reason.
 - **`/` and unknown paths redirect to `/employees`** instead of rendering a 404. React Router was
   in before the extra screens — the first one would otherwise have been a refactor of the entry
   point rather than a line in a list.
 - **`keepPreviousData`** keeps the current rows on screen while a new filter combination loads, so
   toggling a checkbox doesn't flash the table back to a skeleton.
+- **The render states are guard clauses, not a ternary chain.** Every screen has four of them —
+  loading, failed, empty, rows — and writing them inline made each page's `<main>` a four-deep
+  `? :` that had to be read backwards. Each page is now a `*Page` that renders the header and the
+  layout plus a `*Content` that only branches: `if (query.isPending) return <TableSkeleton />` and
+  so on. Passing the query object rather than unpacked flags means TanStack's own types narrow
+  `data` to `T` after the first two guards, which is what removed the `data ?? []` fallbacks.
 - **One icon set, single Radix packages.** The shadcn CLI generates components with a
   `lucide-react` icon, `cn` imported from an unrelated npm package called `cn`, and the `radix-ui`
   umbrella. Every generated primitive here — checkbox, sidebar, sheet, tooltip, separator — has
@@ -239,8 +251,9 @@ These are choices, not oversights:
   on top of the existing shadcn table.
 - **Filter state in the URL** — nice for sharing a filtered view, out of scope here.
 - **Writing from the UI.** The API has `POST` / `PATCH` / `DELETE` for all four tables; no screen
-  calls them. The reference pages are there to show what the filters are built from, and a CRUD
-  form per table is a different assignment.
+  calls them. The lookup pages are there to show what the filters are built from, and a CRUD
+  form per table is a different assignment — though each of them now has a folder of its own to
+  grow one in.
 - **A theme switcher.** `index.css` defines the full `.dark` palette, including the sidebar
   tokens, but nothing toggles the class — the switch is one edit away if it is ever wanted.
 

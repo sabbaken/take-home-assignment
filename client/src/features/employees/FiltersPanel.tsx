@@ -1,4 +1,5 @@
 import { Funnel, X } from '@phosphor-icons/react';
+import type { UseQueryResult } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FilterGroup } from './FilterGroup';
@@ -6,10 +7,7 @@ import { ErrorState } from '@/components/states/ErrorState';
 import type { EmployeeFilters, FilterKey, FilterOptions } from './types';
 
 interface FiltersPanelProps {
-  options: FilterOptions | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  onRetry: () => void;
+  query: UseQueryResult<FilterOptions>;
   filters: EmployeeFilters;
   selectedCount: number;
   onToggle: (key: FilterKey, id: number) => void;
@@ -23,10 +21,7 @@ const GROUPS: { title: string; filterKey: FilterKey; optionsKey: keyof FilterOpt
 ];
 
 export function FiltersPanel({
-  options,
-  isLoading,
-  isError,
-  onRetry,
+  query,
   filters,
   selectedCount,
   onToggle,
@@ -47,26 +42,46 @@ export function FiltersPanel({
         ) : null}
       </div>
 
-      {isError ? (
-        <ErrorState message="Could not load filter options." onRetry={onRetry} />
-      ) : isLoading || !options ? (
-        <FiltersSkeleton />
-      ) : (
-        <div className="divide-y">
-          {GROUPS.map((group) => (
-            <div key={group.filterKey} className="py-5 first:pt-0 last:pb-0">
-              <FilterGroup
-                title={group.title}
-                filterKey={group.filterKey}
-                options={options[group.optionsKey]}
-                selectedIds={filters[group.filterKey]}
-                onToggle={onToggle}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      <FilterGroups query={query} filters={filters} onToggle={onToggle} />
     </aside>
+  );
+}
+
+interface FilterGroupsProps {
+  query: UseQueryResult<FilterOptions>;
+  filters: EmployeeFilters;
+  onToggle: (key: FilterKey, id: number) => void;
+}
+
+/**
+ * The options' three states as guard clauses. There is no empty branch: an
+ * empty lookup table is a set of zero checkboxes, which the groups render fine.
+ */
+function FilterGroups({ query, filters, onToggle }: FilterGroupsProps) {
+  if (query.isError) {
+    return (
+      <ErrorState message="Could not load filter options." onRetry={() => void query.refetch()} />
+    );
+  }
+
+  if (query.isPending) {
+    return <FiltersSkeleton />;
+  }
+
+  return (
+    <div className="divide-y">
+      {GROUPS.map((group) => (
+        <div key={group.filterKey} className="py-5 first:pt-0 last:pb-0">
+          <FilterGroup
+            title={group.title}
+            filterKey={group.filterKey}
+            options={query.data[group.optionsKey]}
+            selectedIds={filters[group.filterKey]}
+            onToggle={onToggle}
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 
