@@ -91,6 +91,9 @@ client/src
   loads, so toggling a checkbox doesn't flash the table back to a skeleton.
 - **One icon set.** shadcn generates its checkbox with a `lucide-react` icon; that import
   was rewired to Phosphor so the project doesn't carry two icon packages.
+- **One npm override.** `@nestjs/platform-express` pins `multer` 2.2.0, which carries a
+  known advisory; the root `package.json` overrides it to 2.4.0 (same major, and the app
+  never uses multer anyway) so a fresh install audits clean.
 - **Vite proxies `/api`** to the API server, which keeps the app same-origin in dev — no
   CORS setup and no `VITE_API_URL` to configure. CORS is enabled server-side anyway, in
   case the client is pointed straight at port 3000.
