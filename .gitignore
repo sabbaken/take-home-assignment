@@ -6,6 +6,9 @@ coverage/
 .env
 .env.local
 .env.*.local
+# Tracked deliberately: the assignment's local DB credentials, so the
+# delivered archive/clone runs without a setup step. Not real secrets.
+!server/.env
 
 .DS_Store
 .idea/

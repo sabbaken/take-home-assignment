@@ -13,7 +13,8 @@ npm run lint        # eslint "src/**/*.ts"
 ```
 
 The API needs MySQL up (`npm run db:up` at the root) — without it Nest boots but every request
-fails at the connection.
+fails at the connection. It also needs `server/.env`; the file is committed, and if it is missing
+or a variable is malformed the boot stops with an error naming the variable.
 
 ## Shape of the API
 
@@ -33,8 +34,14 @@ Responses are `{ data, total }`, not bare arrays, so pagination can be added wit
 A feature module is controller + service + `dto/`; the controller only validates and delegates,
 all query building lives in the service.
 
-- **`database/`** — `TypeOrmModule.forRootAsync` reading `DB_*` from config with the assignment's
-  values as defaults (so the server runs with no `.env`), and `synchronize: false`.
+- **`config/env.validation.ts`** — the one list of environment variables, as a class-validator
+  class checked by `ConfigModule`'s `validate` at boot. **No config fallbacks in code:** the
+  values live in `server/.env` (committed — the assignment's local DB credentials, so the
+  delivered archive runs as-is) with `.env.example` as the template. A new variable is a field
+  here plus a line in both env files and the README table; read it back through
+  `ConfigService<EnvironmentVariables, true>` with `{ infer: true }`, never `process.env`.
+- **`database/`** — `TypeOrmModule.forRootAsync` reading the validated `DB_*` from config, and
+  `synchronize: false`.
 - **`database/entities/`** — read-only mirrors of the given schema, re-exported from
   `entities/index.ts` (import from there, not from the individual files). Columns are snake_case in
   MySQL and camelCase in TS, mapped explicitly via `@Column({ name: 'first_name' })`. All three

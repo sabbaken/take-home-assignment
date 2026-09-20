@@ -37,9 +37,9 @@ npm run dev     # starts the API (:3000) and the client (:5173) together
 
 Then open **http://localhost:5173**.
 
-> **No `.env` file is needed.** The server falls back to the credentials from the assignment
-> (`root/password@localhost:3306/assignment_db`), so a fresh clone runs with the three commands
-> above.
+> **`server/.env` ships with the project** and already holds the assignment's credentials
+> (`root/password@localhost:3306/assignment_db`), so the three commands above are all that is
+> needed. See [Configuration](#configuration-environment-variables).
 
 The database lives in [`server/db`](server/db): the assignment's `Dockerfile` and `seed.sql`,
 plus a compose file. It is also startable exactly as the assignment describes —
@@ -59,10 +59,11 @@ convenience wrapper that adds a healthcheck and a named volume.
 
 ### Configuration (environment variables)
 
-All of them are optional — the defaults below are baked into the app and match the assignment's
-container. Override them by copying [`server/.env.example`](server/.env.example) to `server/.env`.
+The server reads everything from [`server/.env`](server/.env) — there are no fallbacks in the
+code. All six variables are required; a missing or malformed one stops the boot with a message
+naming it, instead of failing later as a refused connection.
 
-| Variable      | Default         | Purpose                                      |
+| Variable      | Shipped value   | Purpose                                      |
 | ------------- | --------------- | -------------------------------------------- |
 | `PORT`        | `3000`          | Port the API listens on                      |
 | `DB_HOST`     | `localhost`     | MySQL host                                   |
@@ -70,6 +71,11 @@ container. Override them by copying [`server/.env.example`](server/.env.example)
 | `DB_USER`     | `root`          | MySQL user                                   |
 | `DB_PASSWORD` | `password`      | MySQL password                               |
 | `DB_NAME`     | `assignment_db` | Database name                                |
+
+`server/.env` is committed **on purpose**: these are the assignment container's own local
+credentials, not secrets, and the file makes the delivered project run without a setup step.
+[`server/.env.example`](server/.env.example) is the template a real deployment would copy.
+The client needs no configuration — Vite proxies `/api`, so there is no `VITE_API_URL`.
 
 ## API
 
@@ -92,6 +98,10 @@ _Analyst + Manager_ and _Japan_ returns Japanese analysts and Japanese managers.
 - **NestJS for a two-endpoint API** is more structure than this strictly needs. It was chosen for
   the readable module/DTO/validation layout; bare Express would be shorter but would show less
   about how I organise code.
+- **No config defaults in code.** The `DB_*` values used to be inline fallbacks in
+  `database.module.ts`; they now live only in `server/.env`, validated at boot by
+  `server/src/config/env.validation.ts`. Config that silently defaults hides a misconfigured
+  environment until the first query.
 - **`synchronize: false`** and read-only entities: the schema ships with the assignment and is
   already seeded, so the ORM must never touch it.
 - **Filtering happens on the server.** With 40 rows it could just as well happen in the browser,
