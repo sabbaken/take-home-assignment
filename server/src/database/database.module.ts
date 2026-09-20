@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvironmentVariables } from '../config/env.validation';
-import { Country, Department, Employee, Role } from './entities';
 
 @Module({
   imports: [
@@ -25,7 +24,9 @@ import { Country, Department, Employee, Role } from './entities';
           username,
           password,
           database,
-          entities: [Country, Department, Employee, Role],
+          // Entities live with their resource; each feature module registers its
+          // own through `TypeOrmModule.forFeature`.
+          autoLoadEntities: true,
           // The schema ships with the assignment and is already seeded —
           // the ORM must never alter it.
           synchronize: false,

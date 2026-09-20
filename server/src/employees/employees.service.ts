@@ -6,7 +6,7 @@ import {
   Repository,
   SelectQueryBuilder,
 } from 'typeorm';
-import { Employee } from '../database/entities';
+import { Employee } from './entities/employee.entity';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { EmployeeRowDto, EmployeesResponseDto } from './dto/employee-row.dto';
 import { FindEmployeesQueryDto } from './dto/find-employees-query.dto';

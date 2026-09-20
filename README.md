@@ -24,8 +24,9 @@ server/src/countries            /api/countries   — a reference table: controll
 server/src/departments          /api/departments — likewise
 server/src/roles                /api/roles       — likewise
 server/src/filters              /api/filters — the three option lists in one response
-server/src/database             entities mapped onto the schema, and the filter that turns a
-                                driver error into a 400/409
+server/src/*/entities           the entity mapped onto the schema, one per resource
+server/src/database             the TypeORM connection, and the filter that turns a driver
+                                error into a 400/409
 server/db                       Dockerfile, seed.sql and the compose file for MySQL
 docs                            the original assignment brief
 ```

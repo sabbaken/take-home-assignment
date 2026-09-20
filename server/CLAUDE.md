@@ -54,15 +54,18 @@ The controller only validates and delegates; all query building lives in the ser
   delivered archive runs as-is) with `.env.example` as the template. A new variable is a field
   here plus a line in both env files and the README table; read it back through
   `ConfigService<EnvironmentVariables, true>` with `{ infer: true }`, never `process.env`.
-- **`database/`** — `TypeOrmModule.forRootAsync` reading the validated `DB_*` from config, and
-  `synchronize: false`.
+- **`database/`** — `TypeOrmModule.forRootAsync` reading the validated `DB_*` from config, with
+  `synchronize: false` and `autoLoadEntities: true`. It holds the connection and knows no
+  entities: a resource's `forFeature` is what registers one, so a new table needs nothing here.
 - **`database/query-failed.filter.ts`** — the only place a driver error becomes an HTTP status:
   duplicate key → 409, row still referenced → 409, missing referenced row → 400.
-- **`database/entities/`** — mirrors of the schema in `db/seed.sql`, re-exported from
-  `entities/index.ts` (import from there, not from the individual files). Columns are snake_case in
-  MySQL and camelCase in TS, mapped explicitly via `@Column({ name: 'first_name' })`. Ids are
+- **`*/entities/`** — one entity per resource, next to the controller and service that own it
+  (`employees/entities/employee.entity.ts`), imported by its path — there is no barrel file.
+  Together they mirror the schema in `db/seed.sql`. Columns are snake_case in MySQL and camelCase
+  in TS, mapped explicitly via `@Column({ name: 'first_name' })`. Ids are
   `@PrimaryGeneratedColumn` — the seed declares the four `id` columns `auto_increment`, so MySQL
-  allocates them and `create` is a plain `save()` with no id in it. All three
+  allocates them and `create` is a plain `save()` with no id in it. `Employee` is the only entity
+  that reaches across resources, for its three `@ManyToOne` targets. All three
   relation FKs are nullable, so entity relations are `T | null` and joins must stay
   `leftJoinAndSelect` — an employee with no role still belongs in the unfiltered table.
 - **`*/dto/`** — two kinds: request DTOs are classes with `class-validator` decorators (a global
@@ -74,15 +77,17 @@ The controller only validates and delegates; all query building lives in the ser
 
 ## Adding a resource
 
-A reference table is five plain files — copy `roles/`, swap the entity and the path:
+A reference table is six plain files — copy `roles/`, swap the entity and the path:
 
+- `entities/role.entity.ts` — the mirror of the table in `db/seed.sql`
 - `dto/create-role.dto.ts` and `dto/update-role.dto.ts` — the same field, required then optional
 - `roles.service.ts` — five methods over an injected `Repository<Role>`
 - `roles.controller.ts` — the five routes, spelled out
-- `roles.module.ts` — `TypeOrmModule.forFeature([Role])`, and it **exports the service**, which is
-  how `FiltersModule` reuses it instead of injecting the repository again
+- `roles.module.ts` — `TypeOrmModule.forFeature([Role])`, which is also what registers the entity
+  on the connection, and it **exports the service**, which is how `FiltersModule` reuses it
+  instead of injecting the repository again
 
-Then add the module to `app.module.ts`. The three reference resources are near copies of each
+Then add the module to `app.module.ts`; `DatabaseModule` needs no edit. The three reference resources are near copies of each
 other **on purpose**: three fifty-line services a reader can follow beat one generic base class
 they have to decode first. If a fifth reference table shows up, copy again — the moment to
 reconsider is when the copies stop being identical.

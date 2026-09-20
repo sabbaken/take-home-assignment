@@ -10,7 +10,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { Department } from '../database/entities';
+import { Department } from './entities/department.entity';
 import { DepartmentsService } from './departments.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';

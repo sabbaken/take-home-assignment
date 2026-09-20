@@ -10,7 +10,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { Role } from '../database/entities';
+import { Role } from './entities/role.entity';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';

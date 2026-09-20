@@ -10,7 +10,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { Country } from '../database/entities';
+import { Country } from './entities/country.entity';
 import { CountriesService } from './countries.service';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { UpdateCountryDto } from './dto/update-country.dto';
