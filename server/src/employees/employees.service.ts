@@ -7,7 +7,6 @@ import {
   SelectQueryBuilder,
 } from 'typeorm';
 import { Employee } from '../database/entities';
-import { nextId } from '../database/next-id';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { EmployeeRowDto, EmployeesResponseDto } from './dto/employee-row.dto';
 import { FindEmployeesQueryDto } from './dto/find-employees-query.dto';
@@ -54,23 +53,20 @@ export class EmployeesService {
   }
 
   async create(dto: CreateEmployeeDto): Promise<EmployeeRowDto> {
-    const id = await nextId(this.employees);
+    // An id the caller left out is a null column — all three FKs are nullable.
+    const employee = await this.employees.save(
+      this.employees.create({
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        role: toReference(dto.roleId),
+        country: toReference(dto.countryId),
+        department: toReference(dto.departmentId),
+      }),
+    );
 
-    // `insert`, not `save`: `save` on a row whose id already exists would
-    // update it, and a `POST` must never overwrite somebody else's row. An id
-    // the caller left out is a null column — all three FKs are nullable.
-    await this.employees.insert({
-      id,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      role: toReference(dto.roleId),
-      country: toReference(dto.countryId),
-      department: toReference(dto.departmentId),
-    });
-
-    // Re-read rather than echo the body back: the relations went in as ids and
+    // Re-read rather than echo the row back: the relations went in as ids and
     // the response owes the client their names.
-    return this.findOne(id);
+    return this.findOne(employee.id);
   }
 
   async update(id: number, dto: UpdateEmployeeDto): Promise<EmployeeRowDto> {

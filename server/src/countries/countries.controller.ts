@@ -10,7 +10,6 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CollectionDto } from '../common/collection.dto';
 import { Country } from '../database/entities';
 import { CountriesService } from './countries.service';
 import { CreateCountryDto } from './dto/create-country.dto';
@@ -21,7 +20,7 @@ export class CountriesController {
   constructor(private readonly countriesService: CountriesService) {}
 
   @Get()
-  findAll(): Promise<CollectionDto<Country>> {
+  findAll(): Promise<Country[]> {
     return this.countriesService.findAll();
   }
 

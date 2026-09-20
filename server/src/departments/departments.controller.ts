@@ -10,7 +10,6 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CollectionDto } from '../common/collection.dto';
 import { Department } from '../database/entities';
 import { DepartmentsService } from './departments.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
@@ -21,7 +20,7 @@ export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
   @Get()
-  findAll(): Promise<CollectionDto<Department>> {
+  findAll(): Promise<Department[]> {
     return this.departmentsService.findAll();
   }
 

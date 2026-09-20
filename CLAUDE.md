@@ -40,12 +40,16 @@ app and hitting the API; if a change warrants tests, propose adding the tooling 
 
 ## Rules that span both packages
 
-- **The schema is given; the data is not.** Never edit `server/db/seed.sql` or the schema it
-  creates, and never enable TypeORM `synchronize` — the entities are hand-written mirrors of that
-  seed and the ORM must never alter it. The **rows** are writable: every table has `POST`,
-  `PATCH` and `DELETE`. Keep in mind while testing that the container is rebuilt from the seed,
-  so writes do not survive `db:down` + `db:up` — and that a manual check against the running API
-  leaves rows behind unless it cleans up after itself.
+- **The schema comes from `server/db/seed.sql`, and the ORM never touches it.** `synchronize`
+  stays `false` and the entities stay hand-written mirrors of that file. The seed carries exactly
+  one deliberate edit to the assignment's original — `auto_increment` on the four `id` columns,
+  so MySQL allocates ids instead of the API (see README → Trade-offs). Any further schema change
+  is an edit to that file plus the matching entity, never a `synchronize` run. The **rows** are
+  writable: every table has `POST`, `PATCH` and `DELETE`. A seed edit only reaches a running
+  database through `npm run db:down`, `docker volume rm assignment_db_data`, `npm run db:up` —
+  the image is rebuilt by `db:up`, but MySQL runs the seed only on an empty data directory. Keep
+  in mind while testing that a manual check against the running API leaves rows behind unless it
+  cleans up after itself.
 - **A resource is a plain Nest module** — controller, service, DTOs, written out per table, with
   no shared base class. A new table is a copy of `server/src/roles/` with the entity and the path
   swapped, not an inheritance hierarchy — see `server/CLAUDE.md` → "Adding a resource".

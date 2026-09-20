@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CollectionDto } from '../common/collection.dto';
 import { Department } from '../database/entities';
-import { nextId } from '../database/next-id';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 
@@ -12,10 +10,8 @@ export class DepartmentsService {
   constructor(@InjectRepository(Department) private readonly departments: Repository<Department>) {}
 
   /** Alphabetical: this list is rendered straight into a filter dropdown. */
-  async findAll(): Promise<CollectionDto<Department>> {
-    const data = await this.departments.find({ order: { name: 'ASC' } });
-
-    return { data, total: data.length };
+  findAll(): Promise<Department[]> {
+    return this.departments.find({ order: { name: 'ASC' } });
   }
 
   async findOne(id: number): Promise<Department> {
@@ -28,17 +24,8 @@ export class DepartmentsService {
     return department;
   }
 
-  async create(dto: CreateDepartmentDto): Promise<Department> {
-    const department = this.departments.create({
-      id: await nextId(this.departments),
-      name: dto.name,
-    });
-
-    // `insert`, not `save`: `save` on a row whose id already exists would
-    // update it, and a `POST` must never overwrite somebody else's row.
-    await this.departments.insert(department);
-
-    return department;
+  create(dto: CreateDepartmentDto): Promise<Department> {
+    return this.departments.save(this.departments.create(dto));
   }
 
   async update(id: number, dto: UpdateDepartmentDto): Promise<Department> {

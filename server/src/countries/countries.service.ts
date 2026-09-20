@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CollectionDto } from '../common/collection.dto';
 import { Country } from '../database/entities';
-import { nextId } from '../database/next-id';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { UpdateCountryDto } from './dto/update-country.dto';
 
@@ -12,10 +10,8 @@ export class CountriesService {
   constructor(@InjectRepository(Country) private readonly countries: Repository<Country>) {}
 
   /** Alphabetical: this list is rendered straight into a filter dropdown. */
-  async findAll(): Promise<CollectionDto<Country>> {
-    const data = await this.countries.find({ order: { name: 'ASC' } });
-
-    return { data, total: data.length };
+  findAll(): Promise<Country[]> {
+    return this.countries.find({ order: { name: 'ASC' } });
   }
 
   async findOne(id: number): Promise<Country> {
@@ -28,14 +24,8 @@ export class CountriesService {
     return country;
   }
 
-  async create(dto: CreateCountryDto): Promise<Country> {
-    const country = this.countries.create({ id: await nextId(this.countries), name: dto.name });
-
-    // `insert`, not `save`: `save` on a row whose id already exists would
-    // update it, and a `POST` must never overwrite somebody else's row.
-    await this.countries.insert(country);
-
-    return country;
+  create(dto: CreateCountryDto): Promise<Country> {
+    return this.countries.save(this.countries.create(dto));
   }
 
   async update(id: number, dto: UpdateCountryDto): Promise<Country> {

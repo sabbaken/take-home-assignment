@@ -24,9 +24,8 @@ server/src/countries            /api/countries   — a reference table: controll
 server/src/departments          /api/departments — likewise
 server/src/roles                /api/roles       — likewise
 server/src/filters              /api/filters — the three option lists in one response
-server/src/database             entities mapped onto the given schema, id allocation, the
-                                filter that turns a driver error into a 400/409
-server/src/common               the `{ data, total }` envelope the list endpoints share
+server/src/database             entities mapped onto the schema, and the filter that turns a
+                                driver error into a 400/409
 server/db                       Dockerfile, seed.sql and the compose file for MySQL
 docs                            the original assignment brief
 ```
@@ -110,7 +109,7 @@ Every table is a full REST resource. `<resource>` is `employees`, `countries`, `
 `roles`:
 
 ```
-GET    /api/<resource>        → { data: T[], total: number }
+GET    /api/<resource>        → T[]  (employees: { data: T[], total: number })
 GET    /api/<resource>/:id    → T
 POST   /api/<resource>        → 201, the created T
 PATCH  /api/<resource>/:id    → the updated T
@@ -132,11 +131,11 @@ a nested object.
 
 ### Status codes
 
-| Code  | When                                                                                     |
-| ----- | ---------------------------------------------------------------------------------------- |
-| `400` | A body or query parameter failed validation, or a `*Id` names a row that is gone         |
-| `404` | No row with that id                                                                      |
-| `409` | Deleting a row another table still references, or two creates racing for the same new id |
+| Code  | When                                                                             |
+| ----- | -------------------------------------------------------------------------------- |
+| `400` | A body or query parameter failed validation, or a `*Id` names a row that is gone |
+| `404` | No row with that id                                                              |
+| `409` | Deleting a row another table still references                                    |
 
 Constraint violations are translated from the driver's error numbers by one global exception
 filter, [`database/query-failed.filter.ts`](server/src/database/query-failed.filter.ts); anything
@@ -151,23 +150,26 @@ unrecognised is passed on to Nest's default filter rather than dressed up as a c
   `database.module.ts`; they now live only in `server/.env`, validated at boot by
   `server/src/config/env.validation.ts`. Config that silently defaults hides a misconfigured
   environment until the first query.
-- **The schema is read-only; the data is not.** `synchronize: false` stays, and the entities are
-  hand-written mirrors of the given `seed.sql` — the ORM must never alter a schema that ships with
-  the assignment. The rows themselves are writable through the API, because an employees service
-  that cannot add an employee is not a service anyone would ship. Note that the container is
-  rebuilt from the seed, so writes survive a restart but not a `db:down` + `db:up`.
+- **The schema lives in `seed.sql`; the ORM never writes it.** `synchronize: false` stays and the
+  entities are hand-written mirrors of that file — a migration is an edit there, not something an
+  ORM decides at boot. The rows are writable through the API, because an employees service that
+  cannot add an employee is not a service anyone would ship. Note that the container re-seeds only
+  on an empty volume, so writes survive a restart but not a `db:down` + `docker volume rm` +
+  `db:up`.
 - **Four plain resources, no shared base class.** Every table has its own controller, service and
   DTOs, written out. An earlier version of this API factored the five operations into a generic
   `CrudService` / `LookupController` pair that each resource inherited: shorter to write, worse to
   read — the routes existed only as decorators on an abstract class, and nothing inside
   `countries/` told you what `GET /api/countries` returned. The three reference services being
   near copies of each other is the trade, and at four tables it is the right one.
-- **Ids are allocated by the API.** No table in the given schema has `AUTO_INCREMENT`, so `create`
-  reads `MAX(id) + 1` and inserts (never `save`, which would quietly update a row that already
-  holds that id). Two simultaneous creates can read the same number: the primary key rejects the
-  loser and it gets a `409` to retry on. Deliberately not a retry loop in the service, and
-  deliberately not `SELECT MAX(id) ... FOR UPDATE` — the lock deadlocks against its own insert,
-  reproducibly, with three parallel requests.
+- **Ids are allocated by MySQL.** The assignment's `seed.sql` declares its keys as plain
+  `id int primary key`, which makes every `INSERT` without an explicit id fail with
+  _"Field 'id' doesn't have a default value"_ — so the four `id` columns are now
+  `auto_increment`. That is the one edit to the given file, and it is the right one: the version
+  where the API picks ids itself has to read `MAX(id) + 1` and then handle two writers reading
+  the same number, which the database already solves correctly and atomically. The seeded rows
+  keep their original ids and the counter starts after them; `create` is a `save()` with no id in
+  it.
 - **Foreign keys are checked by the database, not by the service.** A `POST` with
   `"countryId": 999` reaches MySQL and comes back as a `400`. Validating the three ids up front
   would name the offending field, at the cost of three extra queries per write and a service that
@@ -180,8 +182,11 @@ unrecognised is passed on to Nest's default filter rather than dressed up as a c
   setup in both Vite and Nest for ~15 lines of types. Worth extracting once the contract grows.
   The client mirrors only the two responses it reads; the write DTOs have no client-side twin
   because the page never posts.
-- **Response shape is `{ data, total }`**, not a bare array, so pagination or metadata can be
-  added without a breaking change.
+- **Only the employees list is wrapped** in `{ data, total }` — the page prints that count, and
+  it is the one endpoint big enough to grow a page size or a cursor. The reference tables return
+  plain arrays: five rows that feed a dropdown, the same shape `GET /api/filters` already hands
+  back. A `CollectionDto<T>` shared by all four resources came out again — it bought consistency
+  nobody was asking for and an import every resource had to follow to know its own contract.
 - **`keepPreviousData`** keeps the current rows on screen while a new filter combination loads, so
   toggling a checkbox doesn't flash the table back to a skeleton.
 - **One icon set.** shadcn generates its checkbox with a `lucide-react` icon; that import was
@@ -217,3 +222,6 @@ These are choices, not oversights:
   `npm run db:down` removes the container; `docker volume rm assignment_db_data` drops the data so
   the seed re-runs on the next `npm run db:up`. The seed is the source of truth — nothing written
   through `POST` / `PATCH` / `DELETE` survives that.
+- **Changing [`server/db/seed.sql`](server/db/seed.sql)**: the same three steps. `npm run db:up`
+  rebuilds the image, but MySQL runs a seed only on an empty data directory, so without dropping
+  the volume the old schema stays and the edit looks like it did nothing.

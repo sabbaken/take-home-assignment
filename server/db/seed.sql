@@ -1,5 +1,5 @@
 create table departments (
-    id int primary key,
+    id int primary key auto_increment,
     name varchar(255)
 );
 
@@ -10,7 +10,7 @@ insert into departments (id, name) values (4, 'Engineering');
 
 
 create table roles (
-    id int primary key,
+    id int primary key auto_increment,
     name varchar(255)
 );
 
@@ -20,7 +20,7 @@ insert into roles (id, name) values (3, 'Accountant');
 insert into roles (id, name) values (4, 'Administrator');
 
 create table countries (
-    id int primary key,
+    id int primary key auto_increment,
     name varchar(255)
 );
 
@@ -31,7 +31,7 @@ insert into countries (id, name) values (4, 'France');
 insert into countries (id, name) values (5, 'Spain');
 
 create table employees (
-    id int primary key,
+    id int primary key auto_increment,
     first_name varchar(255),
     last_name varchar(255),
     role_id int,

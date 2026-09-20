@@ -10,7 +10,6 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CollectionDto } from '../common/collection.dto';
 import { Role } from '../database/entities';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -21,7 +20,7 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  findAll(): Promise<CollectionDto<Role>> {
+  findAll(): Promise<Role[]> {
     return this.rolesService.findAll();
   }
 

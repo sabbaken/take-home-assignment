@@ -22,10 +22,10 @@ Everything sits under the global `api` prefix set in `main.ts`.
 
 Four resources — `employees`, `countries`, `departments`, `roles` — each with the same five
 routes: `GET /`, `GET /:id`, `POST /`, `PATCH /:id`, `DELETE /:id` (204). Every resource writes
-those routes out in its own controller; there is no shared base class. List responses are
-`{ data, total }`, never bare arrays, so pagination can be added without a break. `employees`
-maps to a flat DTO (`role` is a name, not a nested object); the reference tables are already
-`{ id, name }` and are returned as they are.
+those routes out in its own controller; there is no shared base class. `GET /api/employees` is
+the one list wrapped in `{ data, total }` — the page prints that count and pagination would land
+there — and it maps rows to a flat DTO (`role` is a name, not a nested object). The reference
+tables return plain arrays of the `{ id, name }` entity.
 
 Two endpoints carry behaviour beyond the base:
 
@@ -56,25 +56,20 @@ The controller only validates and delegates; all query building lives in the ser
   `ConfigService<EnvironmentVariables, true>` with `{ infer: true }`, never `process.env`.
 - **`database/`** — `TypeOrmModule.forRootAsync` reading the validated `DB_*` from config, and
   `synchronize: false`.
-- **`database/next-id.ts`** — `MAX(id) + 1`. No table in the given schema is `AUTO_INCREMENT`, so
-  every `create` allocates its own id and then **`insert`s, never `save`s**: `save` on a row whose
-  id already exists updates it, and a `POST` must not overwrite somebody else's row. Two
-  simultaneous creates can read the same number — the primary key rejects the loser and the filter
-  below answers 409. **Do not "fix" that into a `SELECT ... FOR UPDATE`**: the lock deadlocks
-  against the insert it guards, reproducibly, with three parallel POSTs.
 - **`database/query-failed.filter.ts`** — the only place a driver error becomes an HTTP status:
   duplicate key → 409, row still referenced → 409, missing referenced row → 400.
-- **`database/entities/`** — mirrors of the given schema, re-exported from
+- **`database/entities/`** — mirrors of the schema in `db/seed.sql`, re-exported from
   `entities/index.ts` (import from there, not from the individual files). Columns are snake_case in
-  MySQL and camelCase in TS, mapped explicitly via `@Column({ name: 'first_name' })`. All three
+  MySQL and camelCase in TS, mapped explicitly via `@Column({ name: 'first_name' })`. Ids are
+  `@PrimaryGeneratedColumn` — the seed declares the four `id` columns `auto_increment`, so MySQL
+  allocates them and `create` is a plain `save()` with no id in it. All three
   relation FKs are nullable, so entity relations are `T | null` and joins must stay
   `leftJoinAndSelect` — an employee with no role still belongs in the unfiltered table.
-- **`common/collection.dto.ts`** — the `{ data, total }` envelope, and the only type the
-  resources share.
 - **`*/dto/`** — two kinds: request DTOs are classes with `class-validator` decorators (a global
   `ValidationPipe` with `whitelist: true, transform: true` runs in `main.ts`), response DTOs are
-  plain interfaces describing the flat JSON. An entity is returned as it is only where it already
-  _is_ the contract — the `{ id, name }` reference tables; anything with relations gets a mapper
+  plain interfaces describing the flat JSON, declared by the resource that answers with them —
+  there is no shared response type. An entity is returned as it is only where it already _is_ the
+  contract (the `{ id, name }` reference tables); anything with relations gets a mapper
   (`role: employee.role?.name ?? null`).
 
 ## Adding a resource

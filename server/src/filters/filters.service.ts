@@ -24,6 +24,6 @@ export class FiltersService {
       this.roles.findAll(),
     ]);
 
-    return { countries: countries.data, departments: departments.data, roles: roles.data };
+    return { countries, departments, roles };
   }
 }

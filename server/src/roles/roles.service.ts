@@ -1,9 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CollectionDto } from '../common/collection.dto';
 import { Role } from '../database/entities';
-import { nextId } from '../database/next-id';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 
@@ -12,10 +10,8 @@ export class RolesService {
   constructor(@InjectRepository(Role) private readonly roles: Repository<Role>) {}
 
   /** Alphabetical: this list is rendered straight into a filter dropdown. */
-  async findAll(): Promise<CollectionDto<Role>> {
-    const data = await this.roles.find({ order: { name: 'ASC' } });
-
-    return { data, total: data.length };
+  findAll(): Promise<Role[]> {
+    return this.roles.find({ order: { name: 'ASC' } });
   }
 
   async findOne(id: number): Promise<Role> {
@@ -28,14 +24,8 @@ export class RolesService {
     return role;
   }
 
-  async create(dto: CreateRoleDto): Promise<Role> {
-    const role = this.roles.create({ id: await nextId(this.roles), name: dto.name });
-
-    // `insert`, not `save`: `save` on a row whose id already exists would
-    // update it, and a `POST` must never overwrite somebody else's row.
-    await this.roles.insert(role);
-
-    return role;
+  create(dto: CreateRoleDto): Promise<Role> {
+    return this.roles.save(this.roles.create(dto));
   }
 
   async update(id: number, dto: UpdateRoleDto): Promise<Role> {

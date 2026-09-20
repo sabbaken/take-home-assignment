@@ -1,11 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Country } from './country.entity';
 import { Department } from './department.entity';
 import { Role } from './role.entity';
 
 @Entity({ name: 'employees' })
 export class Employee {
-  @PrimaryColumn({ type: 'int' })
+  @PrimaryGeneratedColumn({ type: 'int' })
   id!: number;
 
   @Column({ name: 'first_name', type: 'varchar', length: 255 })
