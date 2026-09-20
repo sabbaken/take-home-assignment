@@ -31,9 +31,11 @@ React Router config and `routes.ts` the path map; `main.tsx` owns the `QueryClie
 no refetch on focus) and renders the `RouterProvider`.
 
 Within a feature: `api.ts` (fetch + query-string building), `types.ts` (the API contract mirror),
-`use-*.ts` hooks and PascalCase components. The `*Page` is the only stateful composer in each
-folder — it owns its hooks and renders the header, the layout and a `*Content` sibling that picks
-the state; everything below those takes props. Imports use the `@/` alias (Vite + tsconfig paths)
+`use-*.ts` hooks and PascalCase components. **One component per file, named after it** —
+`RolesPage.tsx` holds `RolesPage` and nothing else, `RolesContent.tsx` the `*Content` it renders.
+The `*Page` is the only stateful composer in each folder — it owns its hooks and renders the
+header, the layout and a `*Content` sibling that picks the state; everything below those takes
+props. Imports use the `@/` alias (Vite + tsconfig paths)
 for anything outside the current feature folder, relative paths within it.
 
 ## Conventions worth keeping
@@ -50,11 +52,13 @@ for anything outside the current feature folder, relative paths within it.
   table. New data-driven UI follows the same four-way branch instead of rendering `data?.x ?? []`
   blindly.
 - **That branch is guard clauses in a `*Content` component, never a ternary chain in JSX.** Each
-  page is a `*Page` that renders the header and the layout, and a `*Content` below it in the same
-  file that does nothing but `if (…) return <State />`. `*Content` takes the query itself
+  screen is a `*Page` that renders the header and the layout, and a `*Content` in its own file
+  that does nothing but `if (…) return <State />` — the skeleton's `COLUMN_WIDTHS` lives there
+  too, next to the only component that reads it. `*Content` takes the query itself
   (`UseQueryResult<T>`) rather than unpacked flags, which is what makes `query.data` a `T` after
   the first two guards — that is why no page needs `data ?? []`. The same split is why
-  `FiltersPanel` hands its three states to a `FilterGroups` child.
+  `FiltersPanel` hands its three states to a `FilterGroups` child, which falls back to
+  `FiltersSkeleton`.
 - **Keep branching out of JSX generally.** A `? :` that picks between two elements is fine
   (`selectedCount > 0 ? <Button /> : null`); a chain of them is not. Name the value above the
   `return` (`const count: RowCount = …`), pull the formatting into a function (`formatCount` in

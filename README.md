@@ -223,8 +223,8 @@ unrecognised is passed on to Nest's default filter rather than dressed up as a c
 - **The render states are guard clauses, not a ternary chain.** Every screen has four of them —
   loading, failed, empty, rows — and writing them inline made each page's `<main>` a four-deep
   `? :` that had to be read backwards. Each page is now a `*Page` that renders the header and the
-  layout plus a `*Content` that only branches: `if (query.isPending) return <TableSkeleton />` and
-  so on. Passing the query object rather than unpacked flags means TanStack's own types narrow
+  layout plus a `*Content`, in a file of its own, that only branches:
+  `if (query.isPending) return <TableSkeleton />` and so on. Passing the query object rather than unpacked flags means TanStack's own types narrow
   `data` to `T` after the first two guards, which is what removed the `data ?? []` fallbacks.
 - **One icon set, single Radix packages.** The shadcn CLI generates components with a
   `lucide-react` icon, `cn` imported from an unrelated npm package called `cn`, and the `radix-ui`
