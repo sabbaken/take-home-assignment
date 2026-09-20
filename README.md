@@ -9,6 +9,8 @@ too.
 **[Assignment brief](docs/assignment-requerements.md)** · **[API](#api)** ·
 **[Decisions and trade-offs](#decisions-and-trade-offs)**
 
+![The employees table at /employees: the sidebar, the filter panel for role, country and department, and the first rows of the 40 seeded employees](docs/screenshot-employees.jpg)
+
 ## Stack
 
 - **Monorepo:** npm workspaces — one `npm install` at the root covers both packages
@@ -38,7 +40,7 @@ server/src/*/entities           the entity mapped onto the schema, one per resou
 server/src/database             the TypeORM connection, and the filter that turns a driver
                                 error into a 400/409
 server/db                       Dockerfile, seed.sql and the compose file for MySQL
-docs                            the original assignment brief
+docs                            the assignment brief, and the screenshot above
 ```
 
 ## Quick start
