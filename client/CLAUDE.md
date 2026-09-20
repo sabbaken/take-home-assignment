@@ -18,9 +18,10 @@ npm run lint      # eslint "src/**/*.{ts,tsx}"
 ## Structure
 
 Feature-first: everything about the screen lives in `src/features/employees/`, and
-`src/components/ui/` holds only unowned shadcn primitives. `App.tsx` is a shell that sets one
-Phosphor `IconContext` default and renders the page; `main.tsx` owns the `QueryClient`
-(`retry: 1`, no refetch on focus).
+`src/components/ui/` holds only unowned shadcn primitives. `App.tsx` is the route layout — it sets
+one Phosphor `IconContext` default and renders an `<Outlet />`; `routes.tsx` owns the React Router
+config; `main.tsx` owns the `QueryClient` (`retry: 1`, no refetch on focus) and renders the
+`RouterProvider`.
 
 Within the feature: `api.ts` (fetch + query-string building), `types.ts` (the API contract mirror),
 `use-*.ts` hooks, PascalCase components, and `states/` for the empty / error / skeleton views.
@@ -41,6 +42,11 @@ outside the current feature folder, relative paths within it.
   retry, empty rows → `EmptyState` (offering "clear filters" only when some are set), else the
   table. New data-driven UI follows the same four-way branch instead of rendering `data?.x ?? []`
   blindly.
+- **Routing lives in `routes.tsx`.** One data router (`createBrowserRouter`), `App` as the layout
+  route, and `/employees` as the only screen; `/` and every unmatched path `<Navigate replace>` to
+  it, so there is no 404 page to maintain while there is one page. A second screen is a second
+  entry in that array plus a path in the `routes` map — paths belong in that map, never inline in
+  a `<Link>`. Data still comes from TanStack Query, not from route loaders.
 - **One icon set.** Phosphor only — `components.json` sets `"iconLibrary": "phosphor"`, and shadcn's
   generated `lucide-react` import in `checkbox.tsx` was rewired by hand. If a shadcn `add` pulls in
   lucide, rewire it rather than installing a second icon package.

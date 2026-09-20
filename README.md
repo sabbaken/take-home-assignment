@@ -17,6 +17,7 @@ REST resource for every table in the schema.
 ## Layout
 
 ```
+client/src/routes.tsx           React Router config — `/` redirects to `/employees`
 client/src/features/employees   api client, query hooks, filter state, table and panel
 client/src/components/ui        shadcn/ui primitives
 server/src/employees            /api/employees — CRUD plus the filtered table query
@@ -188,6 +189,11 @@ unrecognised is passed on to Nest's default filter rather than dressed up as a c
   plain arrays: five rows that feed a dropdown, the same shape `GET /api/filters` already hands
   back. A `CollectionDto<T>` shared by all four resources came out again — it bought consistency
   nobody was asking for and an import every resource had to follow to know its own contract.
+- **One route, and a router anyway.** The brief has a single screen, so `/employees` could have
+  been the page rendered at `/`. React Router is in because the first extra screen is otherwise a
+  refactor of the entry point rather than a line in a list; the cost is one dependency and a
+  layout route. `/` and unknown paths redirect to `/employees` instead of rendering a 404 that
+  would be the only thing the router does.
 - **`keepPreviousData`** keeps the current rows on screen while a new filter combination loads, so
   toggling a checkbox doesn't flash the table back to a skeleton.
 - **One icon set.** shadcn generates its checkbox with a `lucide-react` icon; that import was
